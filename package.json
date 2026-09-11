@@ -2,6 +2,7 @@
   "name": "ai-review-bot",
   "version": "1.0.0",
   "description": "AI-powered GitHub PR review bot using Gemini API",
+  "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "bun tsc --noEmit",

@@ -1,17 +1,31 @@
-import { Octokit } from '@octokit/rest';
+import type { Octokit as OctokitType } from '@octokit/rest';
 import { ReviewComment, PRDiffResult } from '../types/index.js';
 
-const token = process.env.GITHUB_TOKEN;
-if (!token) {
-  throw new Error('GITHUB_TOKEN environment variable is not defined.');
-}
+let octokitInstance: OctokitType | null = null;
 
 /**
- * Shared Octokit client instance authenticated with GITHUB_TOKEN
+ * Returns an authenticated Octokit client instance.
+ * Uses dynamic import() to guarantee compatibility across all Node environments,
+ * serverless runtimes (Vercel/AWS Lambda), and bundlers without ERR_REQUIRE_ESM.
  */
-export const octokit = new Octokit({
-  auth: token,
-});
+export async function getOctokit(): Promise<OctokitType> {
+  if (octokitInstance) {
+    return octokitInstance;
+  }
+
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) {
+    throw new Error('GITHUB_TOKEN environment variable is not defined.');
+  }
+
+  // Dynamic import works across both native ESM and CommonJS runtimes
+  const { Octokit } = await import('@octokit/rest');
+  octokitInstance = new Octokit({
+    auth: token,
+  });
+
+  return octokitInstance;
+}
 
 /**
  * Fetches the unified code diff for a given pull request using GitHub REST API.
@@ -28,6 +42,7 @@ export async function getPRDiff(
   pullNumber: number
 ): Promise<string> {
   try {
+    const octokit = await getOctokit();
     const response = await octokit.rest.pulls.get({
       owner,
       repo,
@@ -85,6 +100,7 @@ export async function getExistingReviewComments(
   pullNumber: number
 ): Promise<Array<{ path: string; line: number | null; body: string }>> {
   try {
+    const octokit = await getOctokit();
     const response = await octokit.rest.pulls.listReviewComments({
       owner,
       repo,
@@ -123,6 +139,7 @@ export async function postReviewComments(
   summary = 'Codelens AI Code Review'
 ): Promise<void> {
   try {
+    const octokit = await getOctokit();
     await octokit.rest.pulls.createReview({
       owner,
       repo,
