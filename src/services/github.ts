@@ -1,7 +1,25 @@
-import type { Octokit as OctokitType } from "@octokit/rest";
-import { ReviewComment, PRDiffResult } from "../types/index.js";
+import type { Octokit as OctokitType } from '@octokit/rest';
+import { ReviewComment, PRDiffResult } from '../types/index.js';
 
 let octokitInstance: OctokitType | null = null;
+
+/**
+ * Returns GitHub API rate limit status.
+ */
+export async function getRateLimitStatus(): Promise<{ remaining: number; limit: number; resetDate: string }> {
+  try {
+    const octokit = await getOctokit();
+    const res = await octokit.rest.rateLimit.get();
+    const core = res.data.resources.core;
+    return {
+      remaining: core.remaining,
+      limit: core.limit,
+      resetDate: new Date(core.reset * 1000).toLocaleTimeString(),
+    };
+  } catch (err: any) {
+    return { remaining: -1, limit: -1, resetDate: 'unknown' };
+  }
+}
 
 /**
  * Returns an authenticated Octokit client instance.
