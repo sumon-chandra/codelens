@@ -18,6 +18,9 @@ for (const key of requiredEnvVars) {
 const app = express();
 const PORT = process.env.PORT ?? 3000;
 
+app.get("/", (_req, res) => {
+  res.json({message: "Welcome to the Webhook server"})
+})
 // Health check — useful for Render's uptime monitoring
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
