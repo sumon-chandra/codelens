@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import webhookRouter from './routes/webhook.js';
 
 // Assert required env vars at startup — fail fast with a clear message
 const requiredEnvVars = [
@@ -22,10 +23,12 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Webhook route is mounted here — raw body parsing is handled inside the route
-// (must stay as express.raw, NOT express.json, for HMAC signature verification)
-// import webhookRouter from './routes/webhook.js'; // uncomment when M2 is implemented
-// app.use('/webhook', webhookRouter);
+// Webhook route — raw body parsing is required for HMAC signature verification
+app.use(
+  '/webhook',
+  express.raw({ type: 'application/json' }),
+  webhookRouter
+);
 
 app.listen(PORT, () => {
   console.log(`AI Review Bot listening on port ${PORT}`);
