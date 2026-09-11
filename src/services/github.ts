@@ -14,6 +14,7 @@ export async function getOctokit(): Promise<OctokitType> {
   }
 
   const token = process.env.GITHUB_TOKEN;
+  console.log("Github Token: ", token)
   if (!token) {
     throw new Error('GITHUB_TOKEN environment variable is not defined.');
   }
@@ -51,6 +52,8 @@ export async function getPRDiff(
         accept: 'application/vnd.github.v3.diff',
       },
     });
+
+    console.log({response})
 
     // When the diff Accept header is passed, Octokit returns the raw diff string in response.data
     return response.data as unknown as string;
