@@ -2,76 +2,114 @@ import 'dotenv/config';
 import crypto from 'crypto';
 
 /**
- * Local Webhook Test Simulation
- * Run with: bun run scripts/test-webhook.ts
+ * Phase 2 Webhook Test Suite
+ * Run with: bun run test:webhook
  *
- * Sends a sample GitHub pull_request payload to your local server
- * to verify that the Express pipe and webhook handler are functioning properly.
+ * Validates:
+ * 1. Security Check: Rejection of invalid HMAC signatures (401 Unauthorized)
+ * 2. Signature Verification: Acceptance of valid HMAC signatures (200 OK)
+ * 3. Payload Parsing & Pipeline processing
  */
-async function sendTestWebhook() {
+async function runPhase2Tests() {
   const port = process.env.PORT ?? 3000;
   const url = `http://localhost:${port}/webhook`;
-  const secret = process.env.GITHUB_WEBHOOK_SECRET ?? 'test-secret';
+  const secret = process.env.GITHUB_WEBHOOK_SECRET;
+
+  if (!secret) {
+    console.error('❌ GITHUB_WEBHOOK_SECRET is missing in .env');
+    process.exit(1);
+  }
 
   const mockPayload = {
     action: 'opened',
     number: 1,
     pull_request: {
       number: 1,
-      title: 'feat: add user authentication module',
-      body: 'Implements JWT-based auth flow',
+      title: 'feat: add payment retry logic',
+      body: 'Implements retry handling for failed charges',
       state: 'open',
       head: {
-        ref: 'feature/auth',
-        sha: '6dcb09b5b57875f334f61aebed695e2e4193db5e',
+        ref: 'feature/payment-retry',
+        sha: 'a1b2c3d4e5f678901234567890abcdef12345678',
       },
       base: {
         ref: 'main',
       },
     },
     repository: {
-      name: 'codelens-test',
-      full_name: 'test-user/codelens-test',
+      name: 'codelens-demo',
+      full_name: 'test-org/codelens-demo',
       owner: {
-        login: 'test-user',
+        login: 'test-org',
       },
     },
     sender: {
-      login: 'test-user',
+      login: 'developer',
     },
   };
 
   const payloadString = JSON.stringify(mockPayload);
 
-  // Compute HMAC signature for when signature verification is activated
-  const hmac = crypto.createHmac('sha256', secret);
-  hmac.update(payloadString);
-  const signature = `sha256=${hmac.digest('hex')}`;
+  console.log('🔒 Running Phase 2: Security & Webhook Tests...\n');
 
-  console.log(`📡 Sending test webhook POST to ${url}...`);
-
+  // Test 1: Tampered / Invalid Signature (Should return 401)
+  console.log('--- Test 1: Testing Tampered Signature Rejection ---');
   try {
-    const response = await fetch(url, {
+    const invalidSig = 'sha256=0000000000000000000000000000000000000000000000000000000000000000';
+    const res1 = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-github-event': 'pull_request',
         'x-github-delivery': crypto.randomUUID(),
-        'x-hub-signature-256': signature,
+        'x-hub-signature-256': invalidSig,
       },
       body: payloadString,
     });
 
-    const responseData = await response.json();
-    console.log(`✅ Status: ${response.status} ${response.statusText}`);
-    console.log('📦 Response:', responseData);
-  } catch (error: any) {
-    if (error.code === 'ECONNREFUSED') {
-      console.error(`❌ Connection refused at ${url}. Make sure your server is running ('bun run dev').`);
+    if (res1.status === 401) {
+      console.log('✅ Test 1 Passed: Server correctly rejected invalid signature with 401 Unauthorized.');
     } else {
-      console.error('❌ Error sending test webhook:', error.message);
+      console.warn(`⚠️ Test 1 Warning: Server responded with status ${res1.status}, expected 401.`);
     }
+  } catch (err: any) {
+    if (err.code === 'ECONNREFUSED') {
+      console.error(`❌ Cannot connect to ${url}. Make sure your server is running ('bun run dev').`);
+      return;
+    }
+    console.error('❌ Test 1 Error:', err.message);
   }
+
+  // Test 2: Valid HMAC-SHA256 Signature (Should return 200)
+  console.log('\n--- Test 2: Testing Valid HMAC Signature & Payload Parsing ---');
+  try {
+    const hmac = crypto.createHmac('sha256', secret);
+    hmac.update(payloadString);
+    const validSig = `sha256=${hmac.digest('hex')}`;
+
+    const res2 = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-github-event': 'pull_request',
+        'x-github-delivery': crypto.randomUUID(),
+        'x-hub-signature-256': validSig,
+      },
+      body: payloadString,
+    });
+
+    const body = await res2.json();
+    if (res2.status === 200) {
+      console.log('✅ Test 2 Passed: Server verified HMAC signature and accepted payload (200 OK)!');
+      console.log('📦 Server Response:', body);
+    } else {
+      console.warn(`⚠️ Test 2 Warning: Server responded with status ${res2.status}. Body:`, body);
+    }
+  } catch (err: any) {
+    console.error('❌ Test 2 Error:', err.message);
+  }
+
+  console.log('\n🎉 Phase 2 local test run complete!');
 }
 
-sendTestWebhook();
+runPhase2Tests();

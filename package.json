@@ -6,7 +6,9 @@
     "dev": "tsx watch src/index.ts",
     "build": "bun tsc --noEmit",
     "start": "node dist/index.js",
-    "test:webhook": "bun run scripts/test-webhook.ts"
+    "test:webhook": "bun run scripts/test-webhook.ts",
+    "test:pr": "bun run scripts/test-real-pr.ts",
+    "test:review": "bun run scripts/test-review.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
