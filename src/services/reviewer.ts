@@ -80,12 +80,13 @@ export async function runReview(
   const owner = payload.repository.owner.login;
   const repo = payload.repository.name;
   const pullNumber = payload.pull_request.number;
+  const installationId = payload.installation?.id;
   const modelName = process.env.OPENROUTER_MODEL || "nex-agi/nex-n2.5-pro:free";
 
   // Always resolve the latest head commit SHA from GitHub to match the fetched diff
   let headSha = payload.pull_request?.head?.sha;
   try {
-    const prDetails = await getPRDetails(owner, repo, pullNumber);
+    const prDetails = await getPRDetails(owner, repo, pullNumber, installationId);
     if (prDetails.headSha) {
       headSha = prDetails.headSha;
     }
@@ -97,11 +98,11 @@ export async function runReview(
   }
 
   console.log(
-    `\n🤖 [AI Reviewer] Starting OpenRouter review for ${owner}/${repo}#${pullNumber} (Commit: ${headSha?.slice(0, 7)})...`,
+    `\n🤖 [AI Reviewer] Starting OpenRouter review for ${owner}/${repo}#${pullNumber} (Commit: ${headSha?.slice(0, 7)}, Installation: ${installationId ?? 'PAT'})...`,
   );
 
   // 1. Fetch unified diff from GitHub
-  const rawDiff = await getPRDiff(owner, repo, pullNumber);
+  const rawDiff = await getPRDiff(owner, repo, pullNumber, installationId);
 
   // 2. Parse diff and filter non-code / lockfiles
   const { files, reviewableDiff, ignoredFiles } = parseUnifiedDiff(rawDiff);
@@ -188,7 +189,7 @@ export async function runReview(
 
   // 5. Deduplication against existing PR review comments (handling synchronize events)
   console.log(`[AI Reviewer] Checking existing PR review comments for deduplication...`);
-  const existingComments = await getExistingReviewComments(owner, repo, pullNumber);
+  const existingComments = await getExistingReviewComments(owner, repo, pullNumber, installationId);
 
   const deduplicatedComments: GeminiComment[] = [];
   let skippedDuplicatesCount = 0;
@@ -249,6 +250,7 @@ export async function runReview(
       headSha,
       reviewComments,
       topLevelSummary,
+      installationId,
     );
     reviewPosted = true;
     console.log(
@@ -277,6 +279,7 @@ export async function runReview(
           headSha,
           [],
           fallbackSummary,
+          installationId,
         );
         reviewPosted = true;
         console.log(

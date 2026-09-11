@@ -26,18 +26,35 @@ export async function getRateLimitStatus(): Promise<{ remaining: number; limit: 
  * Uses dynamic import() to guarantee compatibility across all Node environments,
  * serverless runtimes (Vercel/AWS Lambda), and bundlers without ERR_REQUIRE_ESM.
  */
-export async function getOctokit(): Promise<OctokitType> {
+export async function getOctokit(installationId?: number): Promise<OctokitType> {
+  const appId = process.env.GITHUB_APP_ID;
+  const privateKey = process.env.GITHUB_PRIVATE_KEY;
+
+  const { Octokit } = await import('@octokit/rest');
+
+  // 1. If GitHub App credentials and installationId are present, authenticate as GitHub App installation
+  if (appId && privateKey && installationId) {
+    const { createAppAuth } = await import('@octokit/auth-app');
+    return new Octokit({
+      authStrategy: createAppAuth,
+      auth: {
+        appId,
+        privateKey: privateKey.replace(/\\n/g, '\n'),
+        installationId,
+      },
+    });
+  }
+
+  // 2. Otherwise fall back to PAT (GITHUB_TOKEN)
   if (octokitInstance) {
     return octokitInstance;
   }
 
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
-    throw new Error("GITHUB_TOKEN environment variable is not defined.");
+    throw new Error('Neither GitHub App credentials (GITHUB_APP_ID + GITHUB_PRIVATE_KEY) nor GITHUB_TOKEN are defined.');
   }
 
-  // Dynamic import works across both native ESM and CommonJS runtimes
-  const { Octokit } = await import("@octokit/rest");
   octokitInstance = new Octokit({
     auth: token,
   });
@@ -51,15 +68,17 @@ export async function getOctokit(): Promise<OctokitType> {
  * @param owner Repository owner / organization
  * @param repo Repository name
  * @param pullNumber Pull request number
+ * @param installationId Optional GitHub App installation ID
  * @returns Raw unified diff text
  */
 export async function getPRDiff(
   owner: string,
   repo: string,
   pullNumber: number,
+  installationId?: number,
 ): Promise<string> {
   try {
-    const octokit = await getOctokit();
+    const octokit = await getOctokit(installationId);
     const response = await octokit.rest.pulls.get({
       owner,
       repo,
@@ -89,9 +108,10 @@ export async function getPRDetails(
   owner: string,
   repo: string,
   pullNumber: number,
+  installationId?: number,
 ): Promise<{ headSha: string; title: string }> {
   try {
-    const octokit = await getOctokit();
+    const octokit = await getOctokit(installationId);
     const response = await octokit.rest.pulls.get({
       owner,
       repo,
@@ -113,14 +133,16 @@ export async function getPRDetails(
  * @param owner Repository owner
  * @param repo Repository name
  * @param pullNumber Pull request number
+ * @param installationId Optional GitHub App installation ID
  * @returns PRDiffResult object with diff and metadata
  */
 export async function getPRDiffWithMeta(
   owner: string,
   repo: string,
   pullNumber: number,
+  installationId?: number,
 ): Promise<PRDiffResult> {
-  const diff = await getPRDiff(owner, repo, pullNumber);
+  const diff = await getPRDiff(owner, repo, pullNumber, installationId);
   const lines = diff.split("\n");
   const filesCount = lines.filter((line) =>
     line.startsWith("diff --git "),
@@ -142,14 +164,16 @@ export async function getPRDiffWithMeta(
  * @param owner Repository owner
  * @param repo Repository name
  * @param pullNumber Pull request number
+ * @param installationId Optional GitHub App installation ID
  */
 export async function getExistingReviewComments(
   owner: string,
   repo: string,
   pullNumber: number,
+  installationId?: number,
 ): Promise<Array<{ path: string; line: number | null; body: string }>> {
   try {
-    const octokit = await getOctokit();
+    const octokit = await getOctokit(installationId);
     const response = await octokit.rest.pulls.listReviewComments({
       owner,
       repo,
@@ -181,6 +205,7 @@ export async function getExistingReviewComments(
  * @param commitId Head commit SHA against which comments are placed
  * @param comments Array of inline review comments
  * @param summary Optional top-level review summary body
+ * @param installationId Optional GitHub App installation ID
  */
 export async function postReviewComments(
   owner: string,
@@ -189,9 +214,10 @@ export async function postReviewComments(
   commitId: string,
   comments: ReviewComment[],
   summary = "Codelens AI Code Review",
+  installationId?: number,
 ): Promise<void> {
   try {
-    const octokit = await getOctokit();
+    const octokit = await getOctokit(installationId);
     await octokit.rest.pulls.createReview({
       owner,
       repo,

@@ -31,6 +31,9 @@ export interface WebhookPayload {
   sender: {
     login: string;
   };
+  installation?: {
+    id: number;
+  };
   after?: string;
 }
 
