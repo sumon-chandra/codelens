@@ -97,8 +97,25 @@ async function main() {
     });
 
     const responseBody = await res.json();
-    console.log(`✅ Local Server Response (${res.status} ${res.statusText}):`, responseBody);
-    console.log('\n🎉 Real PR test completed successfully! Check your server console to see the diff inspection logs.');
+    console.log(`✅ Local Server Response (${res.status} ${res.statusText})`);
+
+    if (responseBody.review) {
+      console.log('\n================== [AI CODE REVIEW RESULT] ==================');
+      if (responseBody.review.skipped) {
+        console.log(`ℹ️ Review Skipped: ${responseBody.review.reason}`);
+      } else {
+        console.log(`📋 Summary: ${responseBody.review.summary}\n`);
+        console.log(`💬 Comments Generated: ${responseBody.review.commentsCount}`);
+        for (const [idx, comment] of (responseBody.review.comments || []).entries()) {
+          console.log(`\n  --- Comment #${idx + 1} [${comment.severity?.toUpperCase()}] ---`);
+          console.log(`  📍 ${comment.path}:${comment.line}`);
+          console.log(`  📝 ${comment.body}`);
+        }
+      }
+      console.log('=============================================================\n');
+    } else {
+      console.log('📦 Response:', responseBody);
+    }
   } catch (err: any) {
     if (err.code === 'ECONNREFUSED') {
       console.log('ℹ️ Direct GitHub fetch succeeded, but local server was not running at http://localhost:3000.');
