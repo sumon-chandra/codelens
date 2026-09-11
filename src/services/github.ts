@@ -65,6 +65,31 @@ export async function getPRDiff(
 }
 
 /**
+ * Fetches current Pull Request details, notably the latest head commit SHA.
+ */
+export async function getPRDetails(
+  owner: string,
+  repo: string,
+  pullNumber: number,
+): Promise<{ headSha: string; title: string }> {
+  try {
+    const octokit = await getOctokit();
+    const response = await octokit.rest.pulls.get({
+      owner,
+      repo,
+      pull_number: pullNumber,
+    });
+    return {
+      headSha: response.data.head.sha,
+      title: response.data.title,
+    };
+  } catch (error: any) {
+    console.error(`[GitHub] Failed to fetch PR details for ${owner}/${repo}#${pullNumber}:`, error?.message || error);
+    throw error;
+  }
+}
+
+/**
  * Fetches the unified diff and parses metadata (line count, files count).
  *
  * @param owner Repository owner

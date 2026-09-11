@@ -1,5 +1,5 @@
 import { WebhookPayload, GeminiReviewResponse, GeminiComment, ReviewComment } from '../types/index.js';
-import { getPRDiff, postReviewComments } from './github.js';
+import { getPRDiff, getPRDetails, postReviewComments } from './github.js';
 import { reviewDiff } from './openrouter.js';
 import { parseUnifiedDiff } from '../utils/diffParser.js';
 import { defaultCustomRules } from '../config/rules.js';
@@ -66,10 +66,20 @@ export async function runReview(payload: WebhookPayload): Promise<ReviewExecutio
   const owner = payload.repository.owner.login;
   const repo = payload.repository.name;
   const pullNumber = payload.pull_request.number;
-  const headSha = payload.pull_request.head.sha;
   const modelName = process.env.OPENROUTER_MODEL || 'nex-agi/nex-n2.5-pro:free';
 
-  console.log(`\n🤖 [AI Reviewer] Starting OpenRouter review for ${owner}/${repo}#${pullNumber} (Commit: ${headSha.slice(0, 7)})...`);
+  // Always resolve the latest head commit SHA from GitHub to match the fetched diff
+  let headSha = payload.pull_request?.head?.sha;
+  try {
+    const prDetails = await getPRDetails(owner, repo, pullNumber);
+    if (prDetails.headSha) {
+      headSha = prDetails.headSha;
+    }
+  } catch (err: any) {
+    console.warn(`[AI Reviewer] Could not fetch latest PR details, falling back to webhook SHA:`, err?.message);
+  }
+
+  console.log(`\n🤖 [AI Reviewer] Starting OpenRouter review for ${owner}/${repo}#${pullNumber} (Commit: ${headSha?.slice(0, 7)})...`);
 
   // 1. Fetch unified diff from GitHub
   const rawDiff = await getPRDiff(owner, repo, pullNumber);
