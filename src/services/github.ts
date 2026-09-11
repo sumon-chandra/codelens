@@ -14,7 +14,6 @@ export async function getOctokit(): Promise<OctokitType> {
   }
 
   const token = process.env.GITHUB_TOKEN;
-  console.log("Github Token: ", token)
   if (!token) {
     throw new Error('GITHUB_TOKEN environment variable is not defined.');
   }
@@ -24,6 +23,8 @@ export async function getOctokit(): Promise<OctokitType> {
   octokitInstance = new Octokit({
     auth: token,
   });
+
+  console.log("Octokit instance : ", octokitInstance)
 
   return octokitInstance;
 }
