@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Environment variables — never commit real secrets
+.env
+
+# TypeScript compiled output
+dist/
+
+# Prisma local dev database (optional milestone M7)
+prisma/dev.db
+prisma/dev.db-journal
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.log

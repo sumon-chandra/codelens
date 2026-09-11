@@ -1,0 +1,22 @@
+{
+  "name": "ai-review-bot",
+  "version": "1.0.0",
+  "description": "AI-powered GitHub PR review bot using Gemini API",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "bun tsc --noEmit",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "@octokit/rest": "^21.0.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
