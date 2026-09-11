@@ -6,13 +6,16 @@ import webhookRouter from './routes/webhook.js';
 const requiredEnvVars = [
   'GITHUB_WEBHOOK_SECRET',
   'GITHUB_TOKEN',
-  'GEMINI_API_KEY',
 ] as const;
 
 for (const key of requiredEnvVars) {
   if (!process.env[key]) {
     throw new Error(`Missing required environment variable: ${key}`);
   }
+}
+
+if (!process.env.OPENROUTER_API_KEY && !process.env.GEMINI_API_KEY) {
+  throw new Error('Missing required environment variable: OPENROUTER_API_KEY');
 }
 
 const app = express();

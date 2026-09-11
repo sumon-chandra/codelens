@@ -1,16 +1,16 @@
 import 'dotenv/config';
-import { reviewDiff } from '../src/services/gemini.js';
+import { reviewDiff } from '../src/services/openrouter.js';
 import { defaultCustomRules } from '../src/config/rules.js';
 
 /**
- * Test script for Gemini AI Review
- * Tests the Gemini API with a sample diff containing deliberate issues:
+ * Test script for OpenRouter AI Review
+ * Tests OpenRouter with a sample diff containing deliberate issues:
  * 1. Missing try/catch around payment call
  * 2. SQL injection via string concatenation
  * 3. Hardcoded API secret
  */
 async function runTestReview() {
-  console.log('🧪 Starting Gemini AI Review test...\n');
+  console.log('🧪 Starting OpenRouter AI Review test...\n');
 
   const sampleDiff = `diff --git a/src/controllers/paymentController.ts b/src/controllers/paymentController.ts
 new file mode 100644

@@ -1,17 +1,18 @@
 import { Router, Request, Response } from 'express';
 import { verifySignature } from '../middleware/verifySignature.js';
-import { getPRDiff } from '../services/github.js';
+import { runReview } from '../services/reviewer.js';
 import { WebhookPayload } from '../types/index.js';
 
 const webhookRouter = Router();
 
 /**
  * POST /webhook
- * Phase 2: Security & Data Fetching
- * 1. Verifies HMAC-SHA256 signature using verifySignature middleware.
+ * Phase 3: AI Review & Custom Rules
+ * 1. Verifies HMAC-SHA256 signature.
  * 2. Parses the PR payload (repo name, PR number, action: opened vs synchronize).
- * 3. Immediately responds 200 OK to prevent GitHub webhook timeout.
- * 4. Asynchronously fetches the PR diff using Octokit and logs/inspects it.
+ * 3. Runs AI code review: fetches diff, filters non-code files, enforces custom rules,
+ *    and validates comment line positions against actual diff hunks.
+ * 4. Responds with structured review details.
  */
 webhookRouter.post('/', verifySignature, async (req: Request, res: Response): Promise<void> => {
   const githubEvent = req.headers['x-github-event'] as string | undefined;
@@ -73,40 +74,26 @@ webhookRouter.post('/', verifySignature, async (req: Request, res: Response): Pr
   console.log('=========================================================\n');
 
   try {
-    console.log(`[Data Fetching] Fetching diff for ${owner}/${repo}#${pullNumber}...`);
-    const rawDiff = await getPRDiff(owner, repo, pullNumber);
-
-    const lines = rawDiff.split('\n');
-    const totalChars = rawDiff.length;
-    const fileHeaders = lines.filter((l) => l.startsWith('diff --git'));
-
-    console.log('\n------------------ [PR DIFF INSPECTION] ------------------');
-    console.log(`[Diff] Total Length: ${totalChars} characters`);
-    console.log(`[Diff] Total Lines: ${lines.length}`);
-    console.log(`[Diff] Files Changed (${fileHeaders.length}):`);
-    fileHeaders.forEach((fh) => console.log(`  - ${fh.replace('diff --git ', '')}`));
-
-    // Print first 40 lines of the diff for inspection
-    console.log('\n[Diff Preview (first 40 lines)]:');
-    console.log(lines.slice(0, 40).join('\n'));
-    if (lines.length > 40) {
-      console.log(`... and ${lines.length - 40} more lines.`);
-    }
-    console.log('----------------------------------------------------------\n');
+    const reviewResult = await runReview(payload as WebhookPayload);
 
     res.status(200).json({
       received: true,
       repo: `${owner}/${repo}`,
       pullNumber,
       action,
-      filesChanged: fileHeaders.length,
-      linesChanged: lines.length,
-      status: 'diff_fetched_successfully',
+      review: {
+        skipped: reviewResult.skipped,
+        reason: reviewResult.reason,
+        summary: reviewResult.summary ?? null,
+        commentsCount: reviewResult.comments.length,
+        comments: reviewResult.comments,
+        ignoredFiles: reviewResult.ignoredFiles,
+      },
     });
   } catch (error: any) {
-    console.error(`[Data Fetching] Error fetching diff for ${owner}/${repo}#${pullNumber}:`, error?.message || error);
+    console.error(`[Webhook] Review error for ${owner}/${repo}#${pullNumber}:`, error?.message || error);
     res.status(500).json({
-      error: 'Failed to fetch PR diff',
+      error: 'Failed to process AI code review',
       message: error?.message || 'Unknown error',
     });
   }
