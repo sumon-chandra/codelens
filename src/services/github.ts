@@ -53,7 +53,7 @@ export async function getPRDiff(
       },
     });
 
-    console.log({response})
+    console.log("Octokit Response : ", response)
 
     // When the diff Accept header is passed, Octokit returns the raw diff string in response.data
     return response.data as unknown as string;
