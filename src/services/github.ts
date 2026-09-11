@@ -1,5 +1,5 @@
-import type { Octokit as OctokitType } from '@octokit/rest';
-import { ReviewComment, PRDiffResult } from '../types/index.js';
+import type { Octokit as OctokitType } from "@octokit/rest";
+import { ReviewComment, PRDiffResult } from "../types/index.js";
 
 let octokitInstance: OctokitType | null = null;
 
@@ -15,17 +15,14 @@ export async function getOctokit(): Promise<OctokitType> {
 
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
-    throw new Error('GITHUB_TOKEN environment variable is not defined.');
+    throw new Error("GITHUB_TOKEN environment variable is not defined.");
   }
 
   // Dynamic import works across both native ESM and CommonJS runtimes
-  const { Octokit } = await import('@octokit/rest');
+  const { Octokit } = await import("@octokit/rest");
   octokitInstance = new Octokit({
     auth: token,
   });
-
-  console.log("Octokit instance : ", octokitInstance)
-
   return octokitInstance;
 }
 
@@ -41,7 +38,7 @@ export async function getOctokit(): Promise<OctokitType> {
 export async function getPRDiff(
   owner: string,
   repo: string,
-  pullNumber: number
+  pullNumber: number,
 ): Promise<string> {
   try {
     const octokit = await getOctokit();
@@ -50,17 +47,20 @@ export async function getPRDiff(
       repo,
       pull_number: pullNumber,
       headers: {
-        accept: 'application/vnd.github.v3.diff',
+        accept: "application/vnd.github.v3.diff",
       },
     });
-
-    console.log("Octokit Response : ", response)
 
     // When the diff Accept header is passed, Octokit returns the raw diff string in response.data
     return response.data as unknown as string;
   } catch (error: any) {
-    console.error(`[GitHub] Failed to fetch diff for ${owner}/${repo}#${pullNumber}:`, error?.message || error);
-    throw new Error(`GitHub API error fetching diff: ${error?.message || 'Unknown error'}`);
+    console.error(
+      `[GitHub] Failed to fetch diff for ${owner}/${repo}#${pullNumber}:`,
+      error?.message || error,
+    );
+    throw new Error(
+      `GitHub API error fetching diff: ${error?.message || "Unknown error"}`,
+    );
   }
 }
 
@@ -75,11 +75,13 @@ export async function getPRDiff(
 export async function getPRDiffWithMeta(
   owner: string,
   repo: string,
-  pullNumber: number
+  pullNumber: number,
 ): Promise<PRDiffResult> {
   const diff = await getPRDiff(owner, repo, pullNumber);
-  const lines = diff.split('\n');
-  const filesCount = lines.filter((line) => line.startsWith('diff --git ')).length;
+  const lines = diff.split("\n");
+  const filesCount = lines.filter((line) =>
+    line.startsWith("diff --git "),
+  ).length;
 
   return {
     owner,
@@ -101,7 +103,7 @@ export async function getPRDiffWithMeta(
 export async function getExistingReviewComments(
   owner: string,
   repo: string,
-  pullNumber: number
+  pullNumber: number,
 ): Promise<Array<{ path: string; line: number | null; body: string }>> {
   try {
     const octokit = await getOctokit();
@@ -118,7 +120,10 @@ export async function getExistingReviewComments(
       body: comment.body,
     }));
   } catch (error: any) {
-    console.warn(`[GitHub] Could not fetch existing comments for ${owner}/${repo}#${pullNumber}:`, error?.message);
+    console.warn(
+      `[GitHub] Could not fetch existing comments for ${owner}/${repo}#${pullNumber}:`,
+      error?.message,
+    );
     return [];
   }
 }
@@ -140,7 +145,7 @@ export async function postReviewComments(
   pullNumber: number,
   commitId: string,
   comments: ReviewComment[],
-  summary = 'Codelens AI Code Review'
+  summary = "Codelens AI Code Review",
 ): Promise<void> {
   try {
     const octokit = await getOctokit();
@@ -149,7 +154,7 @@ export async function postReviewComments(
       repo,
       pull_number: pullNumber,
       commit_id: commitId,
-      event: 'COMMENT',
+      event: "COMMENT",
       body: summary,
       comments: comments.map((c) => ({
         path: c.path,
@@ -158,11 +163,19 @@ export async function postReviewComments(
       })),
     });
 
-    console.log(`[GitHub] Successfully posted review with ${comments.length} comments to ${owner}/${repo}#${pullNumber}`);
+    console.log(
+      `[GitHub] Successfully posted review with ${comments.length} comments to ${owner}/${repo}#${pullNumber}`,
+    );
   } catch (error: any) {
-    console.error(`[GitHub] Error posting review to ${owner}/${repo}#${pullNumber}:`, error?.message || error);
+    console.error(
+      `[GitHub] Error posting review to ${owner}/${repo}#${pullNumber}:`,
+      error?.message || error,
+    );
     if (error?.status === 422) {
-      console.error('[GitHub] HTTP 422: Comment line must be part of a diff hunk. Upstream error details:', error?.response?.data);
+      console.error(
+        "[GitHub] HTTP 422: Comment line must be part of a diff hunk. Upstream error details:",
+        error?.response?.data,
+      );
     }
     throw error;
   }
