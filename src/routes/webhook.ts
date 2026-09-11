@@ -72,42 +72,44 @@ webhookRouter.post('/', verifySignature, async (req: Request, res: Response): Pr
   console.log(`[Webhook] Delivery ID: ${delivery}`);
   console.log('=========================================================\n');
 
-  // Respond immediately with 200 OK so GitHub does not time out (10s threshold)
-  res.status(200).json({
-    received: true,
-    repo: `${owner}/${repo}`,
-    pullNumber,
-    action,
-    status: 'processing_review',
-  });
+  try {
+    console.log(`[Data Fetching] Fetching diff for ${owner}/${repo}#${pullNumber}...`);
+    const rawDiff = await getPRDiff(owner, repo, pullNumber);
 
-  // Asynchronous Data Fetching & Diff Inspection
-  (async () => {
-    try {
-      console.log(`[Data Fetching] Fetching diff for ${owner}/${repo}#${pullNumber}...`);
-      const rawDiff = await getPRDiff(owner, repo, pullNumber);
+    const lines = rawDiff.split('\n');
+    const totalChars = rawDiff.length;
+    const fileHeaders = lines.filter((l) => l.startsWith('diff --git'));
 
-      const lines = rawDiff.split('\n');
-      const totalChars = rawDiff.length;
-      const fileHeaders = lines.filter((l) => l.startsWith('diff --git'));
+    console.log('\n------------------ [PR DIFF INSPECTION] ------------------');
+    console.log(`[Diff] Total Length: ${totalChars} characters`);
+    console.log(`[Diff] Total Lines: ${lines.length}`);
+    console.log(`[Diff] Files Changed (${fileHeaders.length}):`);
+    fileHeaders.forEach((fh) => console.log(`  - ${fh.replace('diff --git ', '')}`));
 
-      console.log('\n------------------ [PR DIFF INSPECTION] ------------------');
-      console.log(`[Diff] Total Length: ${totalChars} characters`);
-      console.log(`[Diff] Total Lines: ${lines.length}`);
-      console.log(`[Diff] Files Changed (${fileHeaders.length}):`);
-      fileHeaders.forEach((fh) => console.log(`  - ${fh.replace('diff --git ', '')}`));
-
-      // Print first 40 lines of the diff for inspection
-      console.log('\n[Diff Preview (first 40 lines)]:');
-      console.log(lines.slice(0, 40).join('\n'));
-      if (lines.length > 40) {
-        console.log(`... and ${lines.length - 40} more lines.`);
-      }
-      console.log('----------------------------------------------------------\n');
-    } catch (error: any) {
-      console.error(`[Data Fetching] Error fetching diff for ${owner}/${repo}#${pullNumber}:`, error?.message || error);
+    // Print first 40 lines of the diff for inspection
+    console.log('\n[Diff Preview (first 40 lines)]:');
+    console.log(lines.slice(0, 40).join('\n'));
+    if (lines.length > 40) {
+      console.log(`... and ${lines.length - 40} more lines.`);
     }
-  })();
+    console.log('----------------------------------------------------------\n');
+
+    res.status(200).json({
+      received: true,
+      repo: `${owner}/${repo}`,
+      pullNumber,
+      action,
+      filesChanged: fileHeaders.length,
+      linesChanged: lines.length,
+      status: 'diff_fetched_successfully',
+    });
+  } catch (error: any) {
+    console.error(`[Data Fetching] Error fetching diff for ${owner}/${repo}#${pullNumber}:`, error?.message || error);
+    res.status(500).json({
+      error: 'Failed to fetch PR diff',
+      message: error?.message || 'Unknown error',
+    });
+  }
 });
 
 export default webhookRouter;
