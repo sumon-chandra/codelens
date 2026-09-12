@@ -216,9 +216,10 @@ export async function postReviewComments(
   summary = "Codelens AI Code Review",
   installationId?: number,
 ): Promise<void> {
-  try {
-    const octokit = await getOctokit(installationId);
-    await octokit.rest.pulls.createReview({
+  const octokit = await getOctokit(installationId);
+
+  const executeCreateReview = async () => {
+    return await octokit.rest.pulls.createReview({
       owner,
       repo,
       pull_number: pullNumber,
@@ -231,18 +232,66 @@ export async function postReviewComments(
         body: c.body,
       })),
     });
+  };
 
+  try {
+    await executeCreateReview();
     console.log(
       `[GitHub] Successfully posted review with ${comments.length} comments to ${owner}/${repo}#${pullNumber}`,
     );
   } catch (error: any) {
+    const errorMessage = String(error?.message || '').toLowerCase();
+    const errorDetails = JSON.stringify(error?.response?.data || '').toLowerCase();
+    const isPendingReviewConflict =
+      error?.status === 422 &&
+      (errorMessage.includes('pending review') || errorDetails.includes('pending review'));
+
+    // Handle "User can only have one pending review per pull request"
+    if (isPendingReviewConflict) {
+      console.warn(
+        `[GitHub] Detected conflicting pending review on ${owner}/${repo}#${pullNumber}. Cleaning up stale pending reviews...`,
+      );
+      try {
+        const reviews = await octokit.rest.pulls.listReviews({
+          owner,
+          repo,
+          pull_number: pullNumber,
+        });
+        const pendingReviews = reviews.data.filter((r) => r.state === 'PENDING');
+        for (const pending of pendingReviews) {
+          try {
+            await octokit.rest.pulls.deletePendingReview({
+              owner,
+              repo,
+              pull_number: pullNumber,
+              review_id: pending.id,
+            });
+            console.log(`[GitHub] Deleted stale pending review #${pending.id}`);
+          } catch (delErr: any) {
+            console.warn(`[GitHub] Could not delete pending review #${pending.id}:`, delErr?.message);
+          }
+        }
+
+        // Retry review creation after cleaning pending reviews
+        console.log(`[GitHub] Retrying review creation after cleanup...`);
+        await executeCreateReview();
+        console.log(
+          `[GitHub] Successfully posted review with ${comments.length} comments to ${owner}/${repo}#${pullNumber} on retry`,
+        );
+        return;
+      } catch (retryErr: any) {
+        console.error(`[GitHub] Retry failed after pending review cleanup:`, retryErr?.message || retryErr);
+        throw retryErr;
+      }
+    }
+
     console.error(
       `[GitHub] Error posting review to ${owner}/${repo}#${pullNumber}:`,
       error?.message || error,
     );
     if (error?.status === 422) {
       console.error(
-        "[GitHub] HTTP 422: Comment line must be part of a diff hunk. Upstream error details:",
+        "[GitHub] HTTP 422 Upstream error details:",
         error?.response?.data,
       );
     }
