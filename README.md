@@ -1,11 +1,11 @@
 # 🔍 Codelens — AI-Powered Pull Request Code Reviewer
 
 [![Status](https://img.shields.io/badge/Status-Live%20%26%20Active-brightgreen.svg)]()
-[![Platform](https://img.shields.io/badge/Integration-GitHub%20Webhooks-181717.svg?logo=github)]()
+[![Integration](https://img.shields.io/badge/Integration-GitHub%20App%20(1--Click)-181717.svg?logo=github)]()
 [![AI Engine](https://img.shields.io/badge/AI%20Engine-OpenRouter%20Reasoning-6366f1.svg)]()
-[![Security](https://img.shields.io/badge/Security-HMAC--SHA256%20Verified-blue.svg)]()
+[![Security](https://img.shields.io/badge/Security-Ephemeral%20Scoped%20Tokens-blue.svg)]()
 
-> **Codelens** is an enterprise-grade, automated code review platform that integrates directly with GitHub. Powered by advanced reasoning language models via OpenRouter, Codelens acts as an always-on senior staff engineer—analyzing diffs in real time, catching security vulnerabilities, enforcing custom architectural standards, and posting precise inline feedback directly on your Pull Requests.
+> **Codelens** is an autonomous, AI-powered GitHub App that delivers automated code reviews across your repositories in seconds. Powered by frontier reasoning models via OpenRouter, Codelens acts as an always-on senior staff engineer—intercepting pull requests in real time, detecting critical security vulnerabilities, catching hidden runtime bugs, and posting precise inline feedback directly on your modified code lines.
 
 ---
 
@@ -14,196 +14,213 @@
 - [Overview](#-overview)
 - [Key Capabilities](#-key-capabilities)
 - [How Codelens Works](#-how-codelens-works)
-- [Setup & User Manual](#-setup--user-manual)
-- [Review Anatomy & Severity Categories](#-review-anatomy--severity-categories)
+- [Quick Start: 1-Click Installation](#-quick-start-1-click-installation)
+- [Review Anatomy & Severity Badges](#-review-anatomy--severity-badges)
 - [Custom Engineering Rules Engine](#-custom-engineering-rules-engine)
-- [Noise Reduction & Token Budgeting](#-noise-reduction--token-budgeting)
-- [Re-Review & Deduplication Behavior](#-re-review--deduplication-behavior)
-- [Security, Privacy & Data Integrity](#-security-privacy--data-integrity)
+- [Smart Noise Reduction & Token Budgeting](#-smart-noise-reduction--token-budgeting)
+- [Re-Review & Deduplication Engine](#-re-review--deduplication-engine)
+- [Reliability & Self-Healing Architecture](#-reliability--self-healing-architecture)
+- [Security, Permissions & Privacy](#-security-permissions--privacy)
+- [Managing & Uninstalling](#-managing--uninstalling)
 - [Frequently Asked Questions (FAQ)](#-frequently-asked-questions-faq)
 
 ---
 
 ## 🌟 Overview
 
-Code reviews are critical for software quality and security, but manual reviews are often delayed, fatigue-prone, and inconsistent. Minor security omissions—such as unhandled async rejections, SQL string concatenations, or exposed API credentials—regularly bypass human inspection.
+Code reviews are crucial for shipping reliable software, but engineering teams routinely face review bottlenecks, fatigue, and missed vulnerabilities. High-risk bugs—such as SQL string concatenation, leaked credentials, unhandled async exceptions, or unvalidated payment flows—frequently slip past manual checks.
 
-**Codelens** solves this by automating the initial review pass. Operating silently in the cloud, it intercepts pull request activity, analyzes modified lines, and delivers constructive, badged inline suggestions within seconds.
+**Codelens** automates the initial review pass with zero friction. Operating as a native **GitHub App**, it automatically triggers on every pull request, analyzes changes through advanced AI reasoning models, and leaves constructive inline suggestions directly in the GitHub **Files changed** view under its official bot profile.
 
 ---
 
 ## ⚡ Key Capabilities
 
-- **Instant Automated Reviews**: Triggers immediately when a pull request is opened or when new commits are pushed.
-- **Deep Semantic Reasoning**: Uses frontier reasoning models via OpenRouter to analyze context, variable lifecycles, and cross-file relationships rather than superficial regex pattern matching.
-- **Line-by-Line Inline Comments**: Places feedback directly on the specific lines in the GitHub **"Files changed"** tab, complete with actionable fix recommendations.
-- **Executive Review Summaries**: Delivers a top-level review comment summarizing the overall risk profile, total issues found, and architectural health of the pull request.
-- **Zero Comment Spam (Smart Deduplication)**: Automatically detects previously posted bot comments during iterative pushes (`synchronize` events), ensuring developer timelines remain clean.
-- **Strict Diff-Hunk Boundaries**: Validates line coordinates against the actual unified diff to prevent API errors and ensure comments only appear on newly written code.
-- **Comprehensive Asset Filtering**: Intelligently ignores package manager lockfiles, binary files, minified bundles, and images to focus exclusively on reviewable business logic.
+- **1-Click Zero-Config Onboarding**: Connect any repository in seconds. No webhook setup, no API key required from developers, and zero repository code changes.
+- **Deep Semantic Reasoning**: Leverages high-parameter reasoning models via OpenRouter to trace variable lifecycles, execution flows, and cross-file dependencies rather than simple regex patterns.
+- **Pinpoint Inline Reviews**: Comments are placed directly on the exact lines modified in the pull request with clear explanations and suggested fixes.
+- **Executive Review Summaries**: Delivers a top-level summary outlining the pull request's overall risk profile, total issues found, and architectural health.
+- **Zero Comment Spam (Smart Deduplication)**: When developers push subsequent commits (`synchronize` events), Codelens automatically detects existing comments and skips previously reported issues.
+- **Self-Healing Review Engine**: Automatically detects and cleans up orphaned draft/pending reviews, guaranteeing uninterrupted continuous review workflows.
+- **Intelligent Noise Filtering**: Strips lockfiles, compiled binaries, minified bundles, and images so reviews remain laser-focused on reviewable application logic.
+- **Resilience Fallback**: If upstream line coordinates cannot be placed inline, Codelens automatically consolidates all findings into a structured review body so warnings are never lost.
 
 ---
 
 ## 🔄 How Codelens Works
 
-```text
-[ Developer Pushes Code ]
-          │
-          ▼
-[ GitHub Fires Webhook ]
-          │
-          ▼
-[ Codelens Perimeter ] ──► (HMAC-SHA256 Signature Verification)
-          │
-          ▼
-[ Diff Extraction ] ─────► (Retrieves Unified Git Diff & Latest Commit SHA)
-          │
-          ▼
-[ Preprocessing Engine ] ─► (Filters Lockfiles, Bundles, and Asset Binaries)
-          │
-          ▼
-[ AI Reasoning Core ] ───► (Diff + Custom Rules Evaluated via OpenRouter)
-          │
-          ▼
-[ Validation & Dedup ] ──► (Diff-Hunk Mapping & Previous Review De-duplication)
-          │
-          ▼
-[ Inline Review Posted ] ─► (Comments Placed Directly on GitHub PR)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Dev as Developer
+    participant GitHub as GitHub (Repository)
+    participant Codelens as Codelens Engine
+    participant AI as OpenRouter Reasoning AI
+
+    Dev->>GitHub: Opens PR or pushes new commit
+    GitHub->>Codelens: Webhook event (pull_request + installation.id)
+    Codelens->>Codelens: Verify HMAC-SHA256 signature
+    Codelens->>GitHub: Request scoped ephemeral installation token
+    Codelens->>GitHub: Fetch unified diff & latest commit SHA
+    Codelens->>Codelens: Filter lockfiles, bundles, & asset binaries
+    Codelens->>AI: Send diff + custom rules for structured evaluation
+    AI-->>Codelens: Structured issues & review summary
+    Codelens->>Codelens: Validate diff hunks & deduplicate against existing comments
+    Codelens->>GitHub: Submit review with inline comments as [bot]
+    GitHub-->>Dev: Displays review badges & inline guidance
 ```
 
 ---
 
-## 🛠️ Setup & User Manual
+## 🚀 Quick Start: 1-Click Installation
 
-Connecting Codelens to any GitHub repository requires zero code changes to your project. Configuration takes less than one minute.
+Installing Codelens on your GitHub account or organization requires **zero technical configuration**:
 
-### Step 1: Access Webhook Settings
-1. Navigate to your repository on GitHub.
-2. Click on **Settings** in the top navigation bar.
-3. In the left-hand sidebar, select **Webhooks** (under *Code and automation*).
-4. Click the **Add webhook** button on the top right.
+### Step 1: Open the Installation Page
+Visit the official GitHub App page:  
+👉 **[Install Codelens on GitHub](https://github.com/apps/codelens-reviewer-sumon-chandra)**
 
-### Step 2: Configure the Webhook Endpoint
-Enter the following connection parameters:
+### Step 2: Choose Your Account
+Select whether you want to install Codelens on your personal account or an organization.
 
-| Field | Value | Notes |
-|---|---|---|
-| **Payload URL** | `https://<your-codelens-domain>/webhook` | The public URL of your Codelens service |
-| **Content type** | `application/json` | **Must** be set to `application/json` |
-| **Secret** | `<Your Shared Webhook Secret>` | Used for cryptographic HMAC-SHA256 authentication |
-| **SSL verification** | `Enable SSL verification` | Keep enabled for secure HTTPS delivery |
+### Step 3: Select Repositories
+- **All repositories**: Automatically reviews all current and future pull requests.
+- **Only select repositories**: Choose specific repositories (e.g., your backend API or web app).
 
-### Step 3: Select Trigger Events
-1. Under **"Which events would you like to trigger this webhook?"**, select **Let me select individual events**.
-2. Check the **Pull requests** checkbox.
-3. *(Optional)* Uncheck **Pushes** if you only want reviews on pull requests.
-4. Ensure the **Active** checkbox at the bottom is checked.
-5. Click **Add webhook**.
+### Step 4: Authorize & Install
+Click **Install & Authorize**. 
 
-### Step 4: Verification
-GitHub will immediately dispatch a `ping` event. A green checkmark (`✔`) with a `200 OK` response status confirms that your repository is connected and ready for automated code reviews.
+**You're all set!** The next time a pull request is opened or updated in your repository, Codelens will review it automatically.
 
 ---
 
-## 🏷️ Review Anatomy & Severity Categories
+## 🏷️ Review Anatomy & Severity Badges
 
-Every inline comment posted by Codelens includes a visual badge indicating its priority and risk profile:
+Every comment posted by Codelens includes a distinct visual badge identifying its urgency and category:
 
 ### 1. 🚨 `[SECURITY]`
-Critical vulnerabilities that expose the application to compromise or data leakage:
-- Hardcoded API keys, private credentials, or auth tokens.
-- SQL injection vectors (direct parameter interpolation).
-- Missing authentication guards or cross-site scripting (XSS) hazards.
+Critical vulnerabilities that expose systems to compromise or data leakage:
+- Hardcoded API credentials, private secrets, or auth tokens.
+- SQL injection vectors (string interpolation in database queries).
+- Missing authentication/authorization checks or cross-site scripting (XSS) traps.
 
 ### 2. 🐛 `[BUG]`
-Functional bugs, runtime traps, and uncaught exceptions:
-- Missing `try/catch` blocks around external services, billing, or database queries.
+Functional defects, runtime traps, and uncaught exceptions:
+- Missing `try/catch` error boundaries around external APIs, payments, or database calls.
 - Unhandled Promise rejections and missing `await` operators.
-- Out-of-scope variable references and potential `null`/`undefined` dereferencing.
+- Out-of-scope variable references, potential `null`/`undefined` dereferencing.
 
 ### 3. 🎨 `[STYLE]`
-Maintainability, performance, and code clean-up suggestions:
-- Dangerous type assertions (`as any`) where strict typings should be declared.
-- Dead code, redundant operations, or unoptimized data transformations.
-- Deviation from common idiom conventions.
+Maintainability, performance, and best practices:
+- Dangerous type assertions (`as any`) bypassing TypeScript compile-time safety.
+- Dead code, redundant operations, or inefficient data transformations.
+- Deviation from idiomatic patterns and naming conventions.
 
 ### 4. 📋 `[CUSTOM RULE]`
-Project-specific standards defined in your team's custom rule configuration.
+Domain-specific engineering rules defined in the team's custom rule configuration.
 
 ---
 
 ## 📋 Custom Engineering Rules Engine
 
-Codelens goes beyond generic linting by enforcing custom natural-language architectural rules that matter to your team. 
+Codelens actively enforces architectural rules tailored to production standards:
 
-The built-in rules engine actively inspects every diff for:
-1. **Financial & Transactional Integrity**: All billing, payment gateway (e.g. Stripe), and ledger operations must have robust error handling and transactional safety.
-2. **Database Query Safety**: Strict enforcement of parameterized queries and ORM query builders; prohibition of raw SQL string concatenations.
-3. **Secret Hygiene**: Zero-tolerance scanning for test keys, private tokens, or hardcoded credentials.
-4. **Asynchronous Correctness**: Strict validation that all asynchronous calls are properly awaited and wrapped with error boundaries.
-5. **Strict Typing Standards**: Identification of unsafe `any` casts that bypass TypeScript compile-time guarantees.
-6. **Input Boundaries**: Verification that incoming request payloads and webhook parameters are validated before consumption.
+1. **Transactional & Payment Safety**: All financial transactions and external payment gateway calls (e.g., Stripe) must be wrapped in isolated error handlers.
+2. **Database Query Hygiene**: Strict enforcement of parameterized queries and ORM query builders; direct raw SQL string concatenation is blocked.
+3. **Secret Hygiene**: Zero-tolerance detection of private keys, webhook secrets, and test tokens in source code.
+4. **Asynchronous Safety**: Ensuring every asynchronous operation is properly awaited and guarded against unhandled rejections.
+5. **Strict TypeScript Standards**: Flagging unchecked `any` casts and loose type coercions.
+6. **Input Boundary Validation**: Verifying that external user payloads and webhook request bodies are validated before processing.
 
 ---
 
-## 🧹 Noise Reduction & Token Budgeting
+## 🧹 Smart Noise Reduction & Token Budgeting
 
-To ensure reviews are practical, relevant, and cost-effective, Codelens includes intelligent diff preprocessing:
+To guarantee fast turnaround times and eliminate noisy feedback, Codelens includes built-in diff preprocessing:
 
 ### Ignored Files
-The following files are automatically stripped from AI review diffs:
+The following files are automatically filtered before reaching the AI model:
 - **Lockfiles**: `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `bun.lock`, `bun.lockb`.
-- **Media & Binaries**: Images (`.png`, `.jpg`, `.svg`), fonts (`.woff2`, `.ttf`), audio, and PDF assets.
-- **Compiled Bundles**: Minified scripts (`.min.js`), stylesheets (`.min.css`), and source maps (`.map`).
-- **Build Artifacts**: Changes inside `dist/`, `build/`, `.next/`, or test coverage directories.
+- **Media & Binaries**: `.png`, `.jpg`, `.svg`, `.ico`, `.woff2`, `.ttf`, `.pdf`.
+- **Compiled Bundles**: Minified scripts (`.min.js`), stylesheets (`.min.css`), `.map` files.
+- **Build Artifacts**: Output directories such as `dist/`, `build/`, `.next/`, or coverage reports.
 
 ### Diff Truncation Protection
-For exceptionally large pull requests (e.g., initial repository imports or large refactors), diffs exceeding **100,000 characters** are safely truncated with an alert note. This preserves model reasoning capabilities and avoids context window overflow.
+For massive pull requests exceeding **100,000 characters**, Codelens truncates the payload safely with an explanatory note to maintain high reasoning performance and avoid context overflow.
 
 ---
 
-## 🔁 Re-Review & Deduplication Behavior
+## 🔁 Re-Review & Deduplication Engine
 
-Pull requests are living, iterative workflows. Codelens is engineered to support fast commit cycles without cluttering the review thread:
+Codelens is built for real-world, iterative development cycles:
 
-- **On Initial Open (`opened`)**: Codelens reviews the full PR diff, posts inline comments on detected issues, and provides an executive summary.
-- **On Subsequent Pushes (`synchronize`)**:
-  - Codelens queries GitHub's review API to retrieve all existing comments.
-  - It cross-references file paths and line coordinates.
-  - **Duplicate comments are automatically skipped**, ensuring only *newly introduced issues* receive inline alerts.
-  - If all previously reported issues remain unchanged and no new bugs were added, Codelens posts a non-disruptive update:
+- **Initial Review (`opened`)**: Analyzes all modified code, posts inline comments on detected flaws, and generates an executive summary.
+- **Incremental Commits (`synchronize`)**:
+  - Automatically queries the GitHub API for existing review comments on the pull request.
+  - Matches paths and line numbers to **skip already reported issues**.
+  - Posts inline alerts exclusively for *newly introduced issues*.
+  - If all existing issues have been previously noted and no new bugs were added, Codelens leaves a clean update:
     > *🔄 Re-review Update: All detected issues on modified files were previously flagged. No new issues were introduced in this push.*
-- **On Clean Commits**: When a pull request contains zero identified bugs or rule violations, Codelens provides a positive, clean approval summary to keep team momentum high.
+- **Clean PR Commits**: When code passes with zero issues, Codelens provides a positive approval confirmation to keep developer momentum fast.
 
 ---
 
-## 🔒 Security, Privacy & Data Integrity
+## 🛡️ Reliability & Self-Healing Architecture
 
-- **Cryptographic Request Authentication**: Every incoming webhook payload is verified using timing-safe HMAC-SHA256 digests (`crypto.timingSafeEqual`). Forged, missing, or altered payloads are rejected with `401 Unauthorized` before processing.
-- **In-Flight Code Processing**: Codelens operates ephemerally. Repository code is read in memory to compute review feedback and is never stored in external databases or used for model training.
-- **Scoped Permissions**: The bot requires only minimal read access to repository diffs and write access to pull request review comments.
-- **GitHub 422 Resilience Fallback**: If GitHub's API rejects inline comment placement due to transient line shifting, Codelens automatically triggers its resilience fallback, submitting all feedback in a single consolidated review body so critical warnings are never lost.
+Codelens is engineered with defensive guardrails for enterprise reliability:
+
+1. **Pending Review Conflict Auto-Healing**:
+   - If a draft or unsubmitted review is left open, GitHub normally blocks new review submissions with a `422 Unprocessable Entity` error.
+   - Codelens automatically detects this condition, safely cleans up the stale pending review via the GitHub API, and seamlessly retries review submission.
+2. **Diff-Hunk Boundary Validation**:
+   - AI models occasionally generate comments on unchanged surrounding context lines.
+   - Codelens parses unified diff hunks and validates that every comment maps to an actual added/modified line (`+`), preventing GitHub 422 line-placement errors.
+3. **Resilience Fallback**:
+   - If line placement is rejected due to rapid concurrent commits, Codelens activates its fallback mode—posting all feedback in a single comprehensive review comment so critical warnings are never missed.
+
+---
+
+## 🔒 Security, Permissions & Privacy
+
+- **Ephemeral Scoped Access Tokens**: As a GitHub App, Codelens never uses static long-lived personal access tokens. It signs temporary, short-lived installation access tokens on-demand via asymmetric cryptographic keys (`RSA SHA-256`).
+- **Cryptographic Webhook Verification**: All incoming GitHub webhook payloads are validated using timing-safe HMAC-SHA256 signatures (`crypto.timingSafeEqual`). Unauthenticated requests are rejected immediately.
+- **In-Memory Ephemeral Execution**: Repository code is read strictly in memory during the review pass. Code is never stored in persistent databases or used for model training.
+- **Minimal Required Permissions**:
+  - **Pull requests**: `Read & Write` (to inspect diffs and post review comments).
+  - **Contents**: `Read-only` (to inspect commit history).
+  - **Metadata**: `Read-only` (mandatory GitHub default).
+
+---
+
+## ⚙️ Managing & Uninstalling
+
+You maintain full control over where Codelens is installed:
+
+1. In GitHub, go to your **Settings** -> **Applications** -> **Installed GitHub Apps**.
+2. Click **Configure** next to **Codelens-Reviewer**.
+3. From this screen, you can:
+   - Add or remove specific repositories.
+   - Temporarily suspend the app.
+   - Click **Uninstall** to permanently remove Codelens from your account or organization.
 
 ---
 
 ## ❓ Frequently Asked Questions (FAQ)
 
+#### Q: Do I need an OpenAI, Gemini, or OpenRouter API key to use Codelens?
+**A**: No. When using the hosted Codelens GitHub App, all AI processing is handled by the platform backend. End users only need to install the GitHub App.
+
 #### Q: Does Codelens support private repositories?
-**A**: Yes. Codelens supports both public and private repositories seamlessly, provided the access token configured for the service has read access to the target repository.
+**A**: Yes. Codelens works seamlessly with both public and private repositories under your GitHub account or organization.
 
-#### Q: Why did Codelens leave a general summary instead of inline comments?
-**A**: This occurs either because:
-1. The code changes passed review with zero issues detected.
-2. An upstream file path or line number could not be mapped to the current commit diff, prompting Codelens's automatic **Fallback Mode** to ensure feedback was not lost.
+#### Q: Will Codelens post duplicate comments if I push multiple commits?
+**A**: No. Codelens cross-references previously posted comments on every push and automatically skips duplicates to prevent comment spam.
 
-#### Q: How can I change the underlying AI model?
-**A**: Codelens is configured through OpenRouter, allowing you to select any model (e.g., `nex-agi/nex-n2.5-pro:free`, `meta-llama/llama-3.3-70b-instruct:free`, `deepseek/deepseek-r1`, or `anthropic/claude-3.5-sonnet`) by adjusting your service's model configuration.
-
-#### Q: How long does a review take?
-**A**: Typical reviews complete in **3 to 10 seconds**, depending on diff size and the reasoning depth of the selected model.
+#### Q: How fast does Codelens review a Pull Request?
+**A**: Most pull requests are reviewed within **5 to 15 seconds** from the moment the PR is opened or updated.
 
 ---
 
 ## 📄 License & Terms
 
-© Codelens Platform. All rights reserved. Distributed for proprietary enterprise and personal developer use.
+© Codelens. Distributed for proprietary enterprise and personal developer use.
