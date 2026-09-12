@@ -1,7 +1,7 @@
 # 🔍 Codelens — AI-Powered Pull Request Code Reviewer
 
 [![Status](https://img.shields.io/badge/Status-Live%20%26%20Active-brightgreen.svg)]()
-[![Integration](https://img.shields.io/badge/Integration-GitHub%20App%20(1--Click)-181717.svg?logo=github)]()
+[![Integration](<https://img.shields.io/badge/Integration-GitHub%20App%20(1--Click)-181717.svg?logo=github>)]()
 [![AI Engine](https://img.shields.io/badge/AI%20Engine-OpenRouter%20Reasoning-6366f1.svg)]()
 [![Security](https://img.shields.io/badge/Security-Ephemeral%20Scoped%20Tokens-blue.svg)]()
 
@@ -77,18 +77,22 @@ sequenceDiagram
 Installing Codelens on your GitHub account or organization requires **zero technical configuration**:
 
 ### Step 1: Open the Installation Page
+
 Visit the official GitHub App page:  
-👉 **[Install Codelens on GitHub](https://github.com/apps/codelens-reviewer-sumon-chandra)**
+👉 **[Install Codelens on GitHub](https://github.com/apps/codelens-ai-powered-code-reviewer)**
 
 ### Step 2: Choose Your Account
+
 Select whether you want to install Codelens on your personal account or an organization.
 
 ### Step 3: Select Repositories
+
 - **All repositories**: Automatically reviews all current and future pull requests.
 - **Only select repositories**: Choose specific repositories (e.g., your backend API or web app).
 
 ### Step 4: Authorize & Install
-Click **Install & Authorize**. 
+
+Click **Install & Authorize**.
 
 **You're all set!** The next time a pull request is opened or updated in your repository, Codelens will review it automatically.
 
@@ -99,24 +103,31 @@ Click **Install & Authorize**.
 Every comment posted by Codelens includes a distinct visual badge identifying its urgency and category:
 
 ### 1. 🚨 `[SECURITY]`
+
 Critical vulnerabilities that expose systems to compromise or data leakage:
+
 - Hardcoded API credentials, private secrets, or auth tokens.
 - SQL injection vectors (string interpolation in database queries).
 - Missing authentication/authorization checks or cross-site scripting (XSS) traps.
 
 ### 2. 🐛 `[BUG]`
+
 Functional defects, runtime traps, and uncaught exceptions:
+
 - Missing `try/catch` error boundaries around external APIs, payments, or database calls.
 - Unhandled Promise rejections and missing `await` operators.
 - Out-of-scope variable references, potential `null`/`undefined` dereferencing.
 
 ### 3. 🎨 `[STYLE]`
+
 Maintainability, performance, and best practices:
+
 - Dangerous type assertions (`as any`) bypassing TypeScript compile-time safety.
 - Dead code, redundant operations, or inefficient data transformations.
 - Deviation from idiomatic patterns and naming conventions.
 
 ### 4. 📋 `[CUSTOM RULE]`
+
 Domain-specific engineering rules defined in the team's custom rule configuration.
 
 ---
@@ -139,13 +150,16 @@ Codelens actively enforces architectural rules tailored to production standards:
 To guarantee fast turnaround times and eliminate noisy feedback, Codelens includes built-in diff preprocessing:
 
 ### Ignored Files
+
 The following files are automatically filtered before reaching the AI model:
+
 - **Lockfiles**: `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `bun.lock`, `bun.lockb`.
 - **Media & Binaries**: `.png`, `.jpg`, `.svg`, `.ico`, `.woff2`, `.ttf`, `.pdf`.
 - **Compiled Bundles**: Minified scripts (`.min.js`), stylesheets (`.min.css`), `.map` files.
 - **Build Artifacts**: Output directories such as `dist/`, `build/`, `.next/`, or coverage reports.
 
 ### Diff Truncation Protection
+
 For massive pull requests exceeding **100,000 characters**, Codelens truncates the payload safely with an explanatory note to maintain high reasoning performance and avoid context overflow.
 
 ---
@@ -158,9 +172,9 @@ Codelens is built for real-world, iterative development cycles:
 - **Incremental Commits (`synchronize`)**:
   - Automatically queries the GitHub API for existing review comments on the pull request.
   - Matches paths and line numbers to **skip already reported issues**.
-  - Posts inline alerts exclusively for *newly introduced issues*.
+  - Posts inline alerts exclusively for _newly introduced issues_.
   - If all existing issues have been previously noted and no new bugs were added, Codelens leaves a clean update:
-    > *🔄 Re-review Update: All detected issues on modified files were previously flagged. No new issues were introduced in this push.*
+    > _🔄 Re-review Update: All detected issues on modified files were previously flagged. No new issues were introduced in this push._
 - **Clean PR Commits**: When code passes with zero issues, Codelens provides a positive approval confirmation to keep developer momentum fast.
 
 ---
@@ -208,15 +222,19 @@ You maintain full control over where Codelens is installed:
 ## ❓ Frequently Asked Questions (FAQ)
 
 #### Q: Do I need an OpenAI, Gemini, or OpenRouter API key to use Codelens?
+
 **A**: No. When using the hosted Codelens GitHub App, all AI processing is handled by the platform backend. End users only need to install the GitHub App.
 
 #### Q: Does Codelens support private repositories?
+
 **A**: Yes. Codelens works seamlessly with both public and private repositories under your GitHub account or organization.
 
 #### Q: Will Codelens post duplicate comments if I push multiple commits?
+
 **A**: No. Codelens cross-references previously posted comments on every push and automatically skips duplicates to prevent comment spam.
 
 #### Q: How fast does Codelens review a Pull Request?
+
 **A**: Most pull requests are reviewed within **5 to 15 seconds** from the moment the PR is opened or updated.
 
 ---
